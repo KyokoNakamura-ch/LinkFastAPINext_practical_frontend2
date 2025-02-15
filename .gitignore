@@ -1,0 +1,19 @@
+# node_modules を Git に含めない
+node_modules/
+
+# 環境変数ファイル
+.env
+.env.local
+.env.development
+.env.production
+
+# npm キャッシュ関連
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# .next ディレクトリ (Next.js のビルド結果)
+.next/
+
+# VSCode 設定ファイル
+.vscode/
