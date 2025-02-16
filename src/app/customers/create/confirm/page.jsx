@@ -1,50 +1,48 @@
 "use client";
-import { Suspense, useState, useEffect } from "react";
 import OneCustomerInfoCard from "@/app/components/one_customer_info_card.jsx";
 import fetchCustomer from "./fetchCustomer";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic"; // ✅ Next.js に SSR を強制する設定
 
-// 🔥 `useSearchParams()` を分ける
-function CustomerInfo({ customer_id }) {
-  const [customer, setCustomer] = useState(null);
-
-  useEffect(() => {
-    const fetchAndSetCustomer = async () => {
-      if (!customer_id) return;
-      const customerData = await fetchCustomer(customer_id);
-      setCustomer(customerData);
-    };
-    fetchAndSetCustomer();
-  }, [customer_id]);
-
-  if (!customer) return <div>Loading...</div>;
-
-  return <OneCustomerInfoCard {...customer} />;
-}
-
-// 🔥 `Suspense` の外で `useSearchParams` を処理
-function CustomerDataWrapper({ searchParams }) {
-  const customer_id = searchParams.get("customer_id");
+export default function ConfirmPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CustomerInfo customer_id={customer_id} />
+      <ConfirmPageContent />
     </Suspense>
   );
 }
 
-export default function ConfirmPage({ searchParams }) {
+function ConfirmPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const customer_id = searchParams?.get("customer_id") || null; // ✅ `undefined` の場合に `null` を設定
+
+  const [customer, setCustomer] = useState(null);
+
+  useEffect(() => {
+    if (!customer_id) return; // ✅ `customer_id` が `null` の場合は処理を実行しない
+
+    const fetchAndSetCustomer = async () => {
+      try {
+        const customerData = await fetchCustomer(customer_id);
+        setCustomer(customerData);
+      } catch (error) {
+        console.error("Error fetching customer data:", error);
+      }
+    };
+
+    fetchAndSetCustomer();
+  }, [customer_id]); // ✅ `customer_id` を依存配列に追加し、変更時に実行
 
   return (
     <div className="card bordered bg-white border-blue-200 border-2 max-w-sm m-4">
       <div className="alert alert-success p-4 text-center">
         正常に作成しました
       </div>
-      {/* 🔥 Suspense の外で searchParams を処理 */}
-      <CustomerDataWrapper searchParams={searchParams} />
-      <button onClick={() => router.push("./../../customers")}>
+      {customer ? <OneCustomerInfoCard {...customer} /> : <p>Loading...</p>}
+      <button onClick={() => router.push("/customers")}>
         <div className="btn btn-primary m-4 text-2xl">戻る</div>
       </button>
     </div>
